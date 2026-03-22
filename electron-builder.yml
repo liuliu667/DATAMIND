@@ -5,7 +5,7 @@ directories:
   output: release
 asar: true
 defaultArch: "universal"
-publish: []
+publish: null
 files:
   - dist/**/*
   - electron/**/*
