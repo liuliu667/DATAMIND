@@ -3,7 +3,6 @@ productName: DATAMIND
 copyright: 'Copyright © 2024 奶酪数智'
 directories:
   output: release
-publish: never
 asar: true
 defaultArch: "universal"
 files:
