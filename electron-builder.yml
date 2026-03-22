@@ -3,8 +3,8 @@ productName: DATAMIND
 copyright: 'Copyright © 2024 奶酪数智'
 directories:
   output: release
-# 禁用 asar，避免路径解析问题，确保资源可直接访问
-asar: false
+publish: never
+asar: true
 files:
   - dist/**/*
   - electron/**/*
@@ -28,6 +28,7 @@ mac:
   identity: null
   gatekeeperAssess: false
   hardenedRuntime: false
+  arch: ["x64", "arm64"]
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
