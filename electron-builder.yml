@@ -5,6 +5,7 @@ directories:
   output: release
 publish: never
 asar: true
+defaultArch: "universal"
 files:
   - dist/**/*
   - electron/**/*
@@ -28,7 +29,6 @@ mac:
   identity: null
   gatekeeperAssess: false
   hardenedRuntime: false
-  arch: ["x64", "arm64"]
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
