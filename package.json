@@ -8,7 +8,7 @@
     "dev": "node scripts/dev-start.js",
     "build": "vite build && electron-builder",
     "build:win": "vite build && electron-builder --win",
-    "build:mac": "vite build && electron-builder --mac",
+    "build:mac": "vite build && electron-builder --mac --publish never",
     "clean": "rimraf node_modules dist release package-lock.json",
     "postinstall": "electron-builder install-app-deps"
   },
