@@ -1,0 +1,643 @@
+DataMind 企业智能决策系统
+
+项目总体全局想法（纯内容无技术）：
+
+1. 项目定位与市场机遇
+
+1.1 核心价值主张
+以数据驱动 + HR业务洞察 + AI技术应用为核心，针对中小企业销售痛点，打造一体化低门槛数智化平台。通过BI可视化数据诊断实现数据的清晰呈现与分析、DI智能决策完成从数据到可落地方案的转化，帮助企业小步快走实现轻量数智化转型，让数据真正驱动企业增长。
+
+1.2 市场痛点分析
+中小企业困境：销售好坏直接决定企业能否存活，企业拥有数据但缺乏专业分析能力，数据分析师成本高昂，实际销售数据利用率不足25%（工信部数据）。
+数据业务割裂：传统数据可视化仅停留在基础图表呈现层面，数据与业务场景深度割裂；中小企业缺乏专业人力资源管理人才，无法将数据转化为管理动作。
+落地成本高昂：企业人力资源数智化转型适配成本居高不下，头部机构虽已推出AI赋能服务，但中小企业受资金、技术能力限制，难以承担系统落地成本。
+经验依赖风险：海量原始数据零散无序，决策依赖管理者个人经验，缺乏数据支撑，盲目试错导致运营效率低下、数据资源浪费严重。
+
+2.1 产品迭代两步走策略
+项目采用"先确定性后智能"的两步走迭代策略，两个阶段为本质性、颠覆性的能力跨越，从"数据呈现与分析"到"决策生成与落地"实现质的飞跃：
+
+第一步：BI可视化诊断阶段
+通过三个子阶段完成从基础数据整合到行业规则生态的完整建设，解决用户"看不懂数据、不会分析数据"的问题：
+• V1基础确定性阶段：实现基础数据可视化，建立用户信任
+• V2混合智能阶段：引入轻量AI能力，提升数据分析深度
+• V3规则生态阶段：构建用户共创的行业规则市场，积累行业数据与业务规则
+
+第二步：DI辅助智能决策阶段
+这是从"数据可视化分析"到"智能决策生成与落地"的本质性能力跨越。聚焦HR与业务的深度融合，独立研发专属智能决策模型与功能体系，为用户提供可执行、可追踪、可优化的决策建议与落地方案。
+
+
+项目具体技术实施（当前为V1阶段）：
+
+技术栈：Node v24 + Electron 32.2.0 + Vue 3.4 + sql.js + html2canvas + jsPDF
+
+一、项目概述与商业逻辑闭环
+
+1.1 核心价值主张
+DataMind V1是针对中小企业销售绩效管理的轻量级桌面分析工具，解决三大痛点：
+数据看不懂：Excel 几万行数据无法直观洞察
+分析不会做：缺乏专业数据分析师，无法计算排名、占比、趋势
+报告产出难：无法快速生成可分享的专业报告（PDF）
+
+差异化定位：
+完全离线：数据不出本地硬盘，满足企业敏感数据合规要求
+零门槛：3 分钟完成 "拖拽 Excel → 选择模板 → 导出报告" 全流程
+固化最佳实践：内置 4 个经过验证的绩效管理模板，无需配置复杂参数
+动态单位：智能自适应单位系统，根据数据量级自动选择最优显示单位（0.2箱显示为0.2，800箱显示为800，80000箱显示为8.00万）
+现代化UI：采用卡片式设计语言、渐变色系、流畅动画，提升专业感与用户体验
+
+1.2 V1 功能边界（Scope）
+支持格式：.xlsx 单文件（CSV 预留接口）
+数据上限：5 万行警告（性能提示），15 万行硬拒绝（保稳定性）
+分析维度：静态分析（无时间序列趋势，仅时间范围筛选，基于数据实际时间）
+输出形式：PDF 报告（html2canvas截图生成，中文支持）+ Excel 全量数据导出
+单位系统：智能自适应单位系统，无需用户配置，自动根据数据范围选择最优显示精度
+UI体验：现代化视觉设计、流畅交互动画、步骤导航回退功能
+
+二、技术架构全景（V1 实现层）
+
+2.1 分层架构详解
+
+表现层 (Presentation)
+  StepNavigator（步骤导航器）- 带进度条、支持点击回退、步骤描述
+  UploadZone（拖拽上传）- 多状态视觉反馈（拖拽中/加载中/成功/错误）
+  DataPreview（数据预览）- 行列统计、日期列检测、脏数据警告
+  TemplateSelect（模板选择）- 卡片式布局、智能推荐标签、入场动画
+  MappingPanel（字段映射+时间筛选）- 进度指示、智能排序、验证提示
+  Dashboard（4 Templates，ECharts 可视化）- 洞察卡片、统计指标、导出操作
+  
+业务逻辑层 (Business Logic)
+  Pinia Store: mappingStore
+    state: rawData, filteredData, mappings, dateRange
+    getters: isMappingValid, hasDateMapping, isMappingComplete
+    actions: calculateResults()（主线程计算，Worker已废弃）
+    
+计算层 (Calculation)
+  templates/top10/calculator.js（分组聚合，返回全部人员支持分页）
+  templates/product/calculator.js（帕累托分析）
+  templates/comparison/calculator.js（均值对比，全员对比）
+  templates/region/calculator.js（地理分布）
+  
+数据层 (Data Layer)
+  Excel 解析: SheetJS (xlsx)，raw: false 确保日期格式化为字符串
+  日期处理: dayjs（模糊匹配标准化，支持 YYYYMMDD/YYYY-MM-DD/YYYY/MM/DD/MM-DD-YYYY 等多种格式，基于数据实际时间）
+  配置存储: sql.js (WASM) + SQLite（用户设置/映射历史）
+  文件导出: IPC savefile（主进程代理写入，需管理员权限）
+
+2.2 核心技术选型与版本锁定
+
+模块：运行时，技术：Node.js，版本：v24.x，选型理由：用户环境，需兼容
+模块：桌面框架，技术：Electron，版本：32.2.0，选型理由：验证支持 Node 24，稳定
+模块：前端框架，技术：Vue，版本：3.4.0，选型理由：Composition API，性能优异
+模块：构建工具，技术：Vite，版本：5.0，选型理由：ESM 原生支持，热更新快
+模块：UI 组件库，技术：Element Plus，版本：最新，选型理由：企业级表单/表格/图表
+模块：图表库，技术：ECharts，版本：5.x，选型理由：支持大数据渲染，导出图片
+模块：Excel 解析，技术：SheetJS (xlsx)，版本：0.18.5，选型理由：纯 JS，前端解析无依赖
+模块：数据库，技术：sql.js，版本：1.12.0，选型理由：WASM 版 SQLite，零编译
+模块：PDF 生成，技术：html2canvas + jsPDF，版本：最新，选型理由：浏览器渲染中文，无字体文件依赖
+模块：日期处理，技术：dayjs，版本：1.11.x，选型理由：极小体积，模糊解析
+
+2.3 安全与权限架构
+
+Context Isolation 严格模式：contextIsolation: true, nodeIntegration: false
+IPC 白名单：仅暴露 saveFile, platform, nodeVersion, electronVersion 四个通道
+文件系统沙箱：渲染进程无法直接访问 fs，所有文件操作通过 ipcMain.handle('savefile') 代理
+管理员权限：Windows 打包配置 requireAdministrator，确保文件保存权限
+数据隔离：Excel 数据仅存在于内存（Pinia state）和临时 SQLite，应用退出无残留
+
+三、数据流精确路径（逐字节追踪）
+
+3.1 完整数据生命周期
+
+用户拖拽 Excel 文件
+  ↓ (FileReader.readAsArrayBuffer)
+ArrayBuffer (内存中)
+  ↓ (SheetJS.read，配置 raw: false 确保日期转为字符串格式)
+Workbook 对象 → 取第一张 Sheet
+  ↓ (sheet_to_json)
+原始数据数组 [{姓名:'张三',销售额:1000,日期:'20240101'}, ...] (15万行上限检查)
+  ↓ (检测日期列：支持 YYYYMMDD/YYYY-MM-DD/YYYY/MM/DD/MM-DD-YYYY 等格式)
+  ↓ (存入 Pinia: rawData)
+状态更新：rawData, headers (表头数组), dateColumns (检测到的日期列), dirtyColumns (格式不明确的列)
+  ↓ (用户选择模板：TemplateSelect.vue)
+确定模板配置 (requiredFields, optionalFields)
+  ↓ (进入 MappingPanel.vue)
+字段映射：用户选择"销售员→姓名列"，"销售额→金额列"
+  ↓ (智能排序：fieldMatcher.js 关键词匹配，计算匹配分数并排序推荐)
+日期列映射（可选）：用户选择"日期→日期列"
+  ↓ (TimeFilter.vue 显示数据实际时间范围)
+时间范围选择（基于数据实际时间）：显示"数据时间：20240601 至 20241231"
+用户选择"最近一个月" → 基于 dataMaxDate（20241231）计算 20241130 至 20241231
+用户选择"自定义范围" → 通过 el-date-picker 选择起止日期
+  ↓ (Pinia Action: filterDataByDate，使用 parseDateToYYYYMMDD 统一解析多种日期格式)
+filteredData (时间筛选后的子集)
+  ↓ (用户点击"生成报告")
+主线程计算：调用 templates/[id]/calculator.js
+  ↓ (分组/聚合/排序/统计，保留原始精度)
+calculationResult 对象 { top10: [...], statistics: {...} }
+  ↓ (Dashboard.vue 渲染)
+ECharts 实例化 → setOption → 渲染 DOM（智能单位显示：Y轴标签根据数据量级自动显示"销售额"或"销售额（万）"）
+  ↓ (用户点击"导出 PDF")
+html2canvas 截图 DOM → 生成 Canvas → jsPDF 转为 PDF（中文正常显示，日期格式化为 YYYY年MM月DD日）
+IPC 通信：window.electronAPI.saveFile({data: Buffer, filename: '...pdf'})
+  ↓ (主进程：dialog.showSaveDialog，管理员权限确保可写入)
+用户选择保存路径 (C:\Users\...\Desktop\)
+  ↓ (fs.writeFileSync)
+文件写入磁盘成功 → 返回 filePath → ElMessage.success
+
+3.2 关键数据结构契约
+
+原始数据格式（Pinia rawData）：
+Array<{
+  [key: string]: string | number | Date;
+}>
+
+字段映射格式（mappings）：
+{
+  employee: 0,    // number: Excel 列索引
+  amount: 2,      // number: Excel 列索引  
+  date: 5,        // number | undefined: 可选
+}
+
+时间范围格式（dateRange）：
+{
+  type: 'all' | 'dataThisMonth' | 'dataLast30Days' | 'custom';
+  start?: string; // 'YYYYMMDD'，基于 dataMaxDate 计算
+  end?: string;   // 'YYYYMMDD'，基于 dataMaxDate 计算
+}
+dataMaxDate: string // 数据中最新的日期（YYYYMMDD格式），用于相对计算
+
+计算结果标准格式（calculationResult）：
+{
+  statistics: {
+    totalSales: number;      // 原始数值，如 800.5
+    avgSales: number;        // 原始数值，如 133.42
+    top1Name: string;        
+    top1Value: number;       // 原始数值，如 200.8
+    period: string;          // '2024年12月' (基于 dataMaxDate)
+    totalEmployees?: number; // 员工总数（top10/comparison模板）
+  };
+  top10?: Array<{rank, name, value, contribution, vsAvg}>;           // TOP10数据
+  allEmployees?: Array<{rank, name, value, vsAvg, isAboveAvg}>;      // 全部人员（支持分页）
+  pareto?: {top3Contribution, top5Contribution, longTailCount};      // 帕累托分析
+  regions?: Array<{rank, name, value, contribution}>;                // 地区数据
+}
+
+3.3 智能单位系统详解
+
+核心原则：无需用户配置，系统自动根据数据量级选择最优显示方式
+
+实现文件：src/utils/formatters.js
+
+核心函数：
+1. formatSmartNumber(value) - 智能格式化（用于卡片、图表、洞察文本）
+   规则：
+   - ≥1亿：显示为"X.XX亿"（如 150000000 → 1.50亿）
+   - ≥1万：显示为"X.XX万"（如 80000 → 8.00万）
+   - ≥100：显示为整数（如 800 → 800）
+   - ≥1：显示2位小数（如 0.2 → 0.20）
+   - <1：显示4位小数（如 0.0025 → 0.0025）
+
+2. formatExact(value) - 精确格式化（用于表格）
+   规则：
+   - 保留原始数值精度
+   - 使用千分位分隔符（如 1,234.56）
+   - 最多保留4位小数
+
+3. formatMoney(value) - 货币格式化（用于视图显示）
+   规则：
+   - 大数值（≥1万）显示为"X.XX万"
+   - 小数值保留原始精度
+   - 添加千分位分隔符
+
+4. formatMoneyExact(value) - 精确货币格式化（用于表格）
+   规则：
+   - 保留完整精度
+   - 添加千分位分隔符
+
+使用场景分配：
+- 统计卡片（KPI Cards）：使用 formatSmartNumber，直观展示量级
+- 数据表格（Data Tables）：使用 formatExact/formatMoneyExact，保留精确数值
+- 图表坐标轴（Chart Axes）：使用 formatSmartNumber，避免标签过长
+- 人话解读（Narrative Text）：使用 formatSmartNumber + 自动单位后缀
+- 视图展示：使用 formatMoney，兼顾可读性与精度
+
+单位显示逻辑：
+- 系统不存储单位类型（箱/件/个/元），由用户通过字段映射的列名暗示
+- 显示时根据数值大小自动添加"万"后缀，小数值不添加
+- 示例：
+  - 0.2 → "0.2"（小数值，无后缀）
+  - 800 → "800"（中等数值，无后缀）
+  - 80000 → "8.00万"（大数值，自动添加"万"）
+
+3.4 日期解析与处理系统
+
+核心原则：支持多种日期格式，统一转换为 YYYYMMDD 进行内部处理
+
+实现文件：src/stores/mapping.js - parseDateToYYYYMMDD 函数
+
+支持格式：
+- YYYYMMDD（20240101）- 标准格式
+- YYYY-MM-DD（2024-01-01）- ISO格式
+- YYYY/MM/DD（2024/01/01）- 斜杠分隔
+- MM/DD/YYYY（01/01/2024）- 美式格式
+- YYYY年MM月DD日（2024年01月01日）- 中文格式
+- JavaScript Date 对象 - Excel解析可能产生的格式
+
+处理流程：
+1. fileHandler.js 使用 XLSX.read(data, {raw: false}) 确保日期转为字符串
+2. 日期列检测使用正则匹配多种格式
+3. getDataDateRange() 解析数据中的日期范围（min/max）
+4. TimeFilter.vue 基于 dataMaxDate 计算相对时间范围
+5. filterDataByDate() 统一使用 parseDateToYYYYMMDD 进行过滤
+
+四、UI/UX 设计系统详解
+
+4.1 设计原则
+
+现代化视觉：采用卡片式设计语言、渐变色系、圆角边框、柔和阴影
+流畅交互：页面切换淡入淡出、元素悬浮效果、进度动画反馈
+信息层次：通过颜色、大小、间距建立清晰的视觉层级
+品牌一致性：统一的配色方案（主色#5b6af5、成功#00c853、警告#ffab00、危险#ff5252）
+
+4.2 核心组件设计
+
+StepNavigator（步骤导航器）：
+- 顶部进度条显示整体进度
+- 每个步骤显示图标、标题、描述
+- 已完成步骤显示勾选标记
+- 支持点击回退到已完成步骤（带确认对话框）
+- 当前步骤高亮显示
+
+UploadZone（文件上传区）：
+- 多状态视觉反馈：
+  - 默认状态：虚线边框、上传图标、提示文字
+  - 拖拽中：边框高亮、背景变色
+  - 加载中：旋转动画、进度提示
+  - 成功：勾选动画、文件信息卡片
+  - 错误：红色边框、错误提示
+- 显示文件名、大小、行数统计
+- 大数据警告（5万行提示、15万行拒绝）
+
+DataPreview（数据预览）：
+- 标题区：行列统计、日期列检测 badge
+- 脏数据警告：检测到的格式问题列
+- 数据表格：前10行预览、列头显示日期标记
+- 操作按钮：重新选择、确认继续
+
+TemplateSelect（模板选择）：
+- 卡片式网格布局（2x2）
+- 卡片内容：图标、名称、描述、必需字段标签
+- 选中状态：发光边框、勾选标记
+- 入场动画：阶梯式延迟淡入
+- 智能推荐：基于数据特征推荐最佳模板
+
+MappingPanel（字段映射）：
+- 模板信息卡片：图标、名称、描述、配置状态
+- 必需字段区：进度指示、字段选择器
+- 智能推荐：根据列名匹配度排序，高分显示"智能推荐"标签
+- 数据预览：显示该列前3个样本值
+- 验证错误：字段类型不匹配提示
+- 时间筛选：日期映射后显示 TimeFilter 面板
+
+TimeFilter（时间范围筛选）：
+- 数据时间范围卡片：显示检测到的数据时间范围
+- 筛选选项：全部时间、数据当月、数据最近30天、自定义范围
+- 自定义范围：日期选择器（el-date-picker）
+- 当前筛选范围横幅：显示生效的筛选条件
+
+Dashboard（分析视图）：
+- 视图头部：图标、标题、数据时间范围、下载图表按钮
+- 洞察卡片：渐变色背景、人话解读、高亮关键数据
+- 图表区：ECharts 渲染、响应式布局
+- 统计卡片：图标、标签、数值（智能格式化）
+- 操作栏：导出PDF、下载Excel按钮
+
+4.3 动画与过渡规范
+
+页面切换：fade 过渡，时长 300ms
+卡片悬浮：translateY(-4px) + 阴影增强，时长 200ms
+进度条：宽度动画，时长 600ms，缓动 ease-out
+加载动画：旋转动画 1s linear infinite
+入场动画：阶梯式延迟，每项延迟 100ms
+
+五、功能模块详解（4 个核心模板）
+
+5.1 模板 1：员工业绩排行榜（top10）
+
+业务目标：识别销冠和尾部人员，用于月度表彰和绩效谈话。
+
+必需字段：
+employee（销售员）：文本，分组维度
+amount（销售额）：数值，聚合指标
+
+可选字段：
+date（日期）：用于时间范围筛选
+
+单位处理：
+智能自适应单位系统，根据数据范围自动选择最优显示方式
+- 小数值（如0.2箱）：显示为"0.2"
+- 中等数值（如800箱）：显示为"800"
+- 大数值（如80000箱）：显示为"8.00万"
+表格中显示精确值，卡片和图表中显示智能格式化值
+
+计算逻辑：
+按 employee 分组，amount 求和（处理同一员工多行记录）
+降序排序，返回全部人员（支持分页查看，不限于TOP10）
+计算统计值：
+  totalSales: 全员求和（原始数值）
+  avgSales: totalSales / 员工数（保留2位小数）
+  top1Contribution: top1.value / totalSales
+  vsAvg: (top1.value - 均值) / 均值
+  totalEmployees: 员工总数
+
+可视化输出：
+横向柱状图：Y 轴为员工姓名（第 1 名在顶部），X 轴为销售额，数值自动格式化
+右侧统计卡片：冠军业绩（智能格式化）、团队均值（智能格式化）、上榜门槛、团队人数
+数据表：排名、姓名、销售额（精确值）、占比、与均值差额
+
+人话解读模板（智能单位）：
+"本月销售冠军是 张三，销售额 800箱，超出团队均值 45%，为团队贡献 12.5% 的业绩。团队总销售额 3200箱，人均 133.33箱。本月共有 15 人产生业绩。"
+（注：实际显示根据数值大小自动调整，如80000箱会显示为"8.00万箱"）
+
+5.2 模板 2：产品销量排行（product）
+
+业务目标：识别明星产品和长尾产品，指导 SKU 优化和库存决策。
+
+必需字段：
+product（产品名称）：文本
+amount（销售额/销量）：数值
+
+可选字段：
+date（日期）：用于时间范围筛选
+
+单位处理：
+智能自适应单位系统，根据数据范围自动选择最优显示方式
+
+计算逻辑：
+按 product 分组，amount 求和
+降序排序，取 TOP10
+帕累托分析：
+  计算累计贡献度（running total / grand total）
+  top3Contribution: 前3项累计占比（通常 70-80%）
+  top5Contribution: 前5项累计占比
+  longTailCount: 贡献度 <5% 的产品数量
+
+可视化输出：
+左侧环形图：TOP5 产品各自扇区，剩余归为"其他"
+右侧横向条形图：TOP10 产品，TOP3 金色边框
+底部表格：排名、产品名、销量（精确值）、占比、累计占比
+
+人话解读模板：
+"产品 A 是绝对主力，销量 1200箱，占比 32.1%。TOP3 产品贡献了 78% 的业绩，符合二八法则。共有 15 个长尾产品（占比<5%），建议优化 SKU。"
+
+5.3 模板 3：销售员业绩对比（comparison）
+
+业务目标：诊断团队分布健康度，识别超标者和待辅导者。
+
+必需字段：
+employee（销售员）：文本
+amount（销售额）：数值
+
+可选字段：
+date（日期）：用于时间范围筛选
+
+计算逻辑：
+全员分组求和（不降序截断，保留所有人）
+计算 avgSales（总业绩 / 人数）
+每人计算：
+  vsAvg: (个人 - 均值) / 均值
+  isAboveAvg: 个人 > 均值
+  isTop3: 排名 <= 3
+统计：aboveAvgCount（超标人数），belowAvgCount（待辅导人数），maxGap（冠军/垫底倍数）
+
+可视化输出：
+全员柱状图：X 轴为全员姓名（前30名），Y 轴为业绩（智能格式化），均值线标记，超标者绿色，低标者红色
+底部统计卡片：团队均值（智能格式化）、超标人数、待辅导人数、头尾差距倍数、达标率进度条
+
+人话解读模板：
+"团队平均业绩 133箱，5 人超标（表现优异），3 人待辅导（低于均值）。头尾差距 3.5 倍，团队分化严重，需重点关注尾部人员技能提升。"
+
+5.4 模板 4：地区销售分布（region）
+
+业务目标：识别优势区域和弱势区域，指导资源投放和市场开拓。
+
+必需字段：
+region（地区/省份/城市）：文本
+amount（销售额）：数值
+
+可选字段：
+date（日期）：用于时间范围筛选
+
+计算逻辑：
+按 region 分组，amount 求和
+降序排序
+计算各区域 contribution（区域值 / 总值）
+识别 topRegion（冠军地区）和 bottomRegion（垫底地区）
+concentration: topContribution > 0.4 ? 'high' : 'low'
+
+可视化输出：
+左侧饼图：各地区占比（如地区>8个，则 TOP7+其他）
+右侧柱状图：地区排名（横向条形图）
+底部表格：排名、地区、销售额（精确值）、占比、与冠军差距
+
+人话解读模板：
+"华东 区贡献度最高，占 45%（近半壁江山），华南 仅占 8%。市场高度集中，建议巩固华东优势；同时关注华南区域是否存在资源错配或市场潜力未挖掘。"
+
+六、扩展性预埋（V2/V3/DI 路径）
+
+6.1 模板插件化架构（为 V3 规则市场预留）
+
+当前代码结构已实现约定优于配置的插件化目录：
+src/templates/
+  [templateId]/
+    config.js            V3可动态加载的用户配置（字段定义、图表类型、计算规则）
+    calculator.js        纯函数，输入输出标准化（支持动态导入）
+    view.vue             组件，props标准化
+
+V3演进路径：
+用户上传customtemplate.json（符合config.js schema）
+系统校验后复制到userData/templates/目录
+应用启动时通过import()动态加载新模板
+无需重新打包应用，实现"规则市场"零代码扩展
+
+6.2 计算层升级（为DI智能决策预埋）
+
+当前calculator.js为纯JavaScript函数，已预埋Python调用接口：
+V1当前：export function calculateTop10(data, mapping, dateRange) { JS实现 }
+DI阶段演进：
+export async function calculateTop10(data, mapping, dateRange) {
+  if (window.electronAPI?.isDIEnabled) {
+    // 调用本地Python子进程（Ollama本地模型或sklearn算法）
+    return await window.electronAPI.runPython('predict_sales', data);
+  }
+  // 回退到JS实现
+}
+
+数据流向保持不变：原始数据→主线程计算→JS计算或Python算法→返回结果→Vue展示
+
+6.3 数据层云端化（为DI预留）
+
+当前sql.js封装层使用统一接口，支持无缝切换：
+V1配置：dialect: 'sqlite', storage: dbPath（本地文件）
+DI阶段：仅修改为dialect: 'postgres', host: 'cloud.datamind.com'
+业务代码零改动，ORM抽象层自动适配
+
+6.4 单位系统扩展预留
+
+当前智能单位系统支持自动适配（个/万/亿）
+V2预留：支持自定义单位公式（如"万箱"=10000箱，"打"=12件）
+通过智能识别列名中的单位关键词（如"箱"、"件"、"个"）自动应用
+
+6.5 跨平台架构一致性
+
+Windows与macOS在V1使用相同技术栈（Electron+Vue+sql.js）
+V2/V3阶段：
+  Windows继续Portable模式
+  macOS同步支持（通过GitHub Actions构建）
+  移动端预留：通过Capacitor或PWA方案（V3后评估）
+
+七、跨平台打包与CI/CD策略
+
+7.1 Windows 打包配置（本地构建）
+
+目标：单文件绿色版（Portable），无需安装程序，避免NSIS下载问题
+
+配置：
+electron-builder.yml 设置 win.target 为 portable
+设置 requestedExecutionLevel: requireAdministrator（解决文件保存权限）
+图标：build/icon.png（512x512）
+输出：release/DataMind-V1.0.0.exe（约 80-100MB，包含 html2canvas/jsPDF/sql.js）
+
+权限处理：
+用户双击运行 → 弹出 UAC "此应用需要管理员权限" → 点击"是" → 应用启动
+确保可写入桌面/文档/下载等目录
+
+7.2 macOS 打包配置（GitHub Actions CI/CD）
+
+目标：生成标准 DMG 安装包，支持 Intel 和 Apple Silicon（双架构）
+
+CI/CD 方案：
+使用 GitHub Actions 免费版（public 仓库免费，private 仓库有限额）
+工作流文件：.github/workflows/build.yml
+触发条件：手动触发或 tag 推送
+
+macOS 特殊处理：
+路径适配：macOS 应用资源路径为 AppName.app/Contents/resources/，使用 process.resourcesPath 自动适配
+权限模型：macOS 沙盒限制较严，但 extraResources 配置与 Windows 一致，文件置于 resources 目录下即可访问
+代码签名：V1 阶段接受未签名版（用户需在"系统设置-隐私与安全性"中手动允许）
+  如需签名，需配置 Apple Developer 账号（$99/年）及证书 secrets
+
+构建命令：
+Windows（本地）：npm run build:win → electron-builder win portable
+macOS（GitHub Actions）：electron-builder mac dmg universal（生成通用二进制）
+
+八、交付物清单与验收标准（Definition of Done）
+
+8.1 代码交付物
+
+package.json：项目配置，包含 scripts: dev/build/clean
+electron/main.js：主进程，ContextIsolation 启用，IPC saveFile 通道，管理员权限配置
+electron/preload.js：预加载脚本，暴露 electronAPI: saveFile, platform, nodeVersion, electronVersion
+src/components/StepNavigator.vue：步骤导航器，带进度条、支持回退
+src/components/UploadZone.vue：拖拽上传，多状态视觉反馈，15万行拒绝
+src/components/DataPreview.vue：数据预览，行列统计、日期列检测、脏数据警告
+src/components/TemplateSelect.vue：模板选择，卡片式布局、入场动画
+src/components/MappingPanel.vue：字段映射，智能推荐、进度指示、验证提示
+src/components/TimeFilter.vue：时间筛选，基于数据实际时间
+src/utils/formatters.js：智能单位格式化工具（formatSmartNumber/formatExact/formatMoney/formatMoneyExact）
+src/utils/fileHandler.js：Excel解析，多格式日期检测
+src/stores/mapping.js：Pinia状态管理，日期解析与过滤
+src/templates/[id]/calculator.js：计算逻辑，4 模板各自实现
+src/templates/[id]/view.vue：模板视图，ECharts 渲染，洞察卡片，人话解读
+src/utils/pdfGeneratorHtml.js：PDF 导出（html2canvas + jsPDF），中文支持，日期格式化
+src/utils/excelExporter.js：Excel 导出，IPC 调用，全量数据
+build/icon.png：应用图标，512x512
+
+8.2 功能验收标准
+
+安装测试：Windows 生成 DataMind-V1.0.0.exe，双击运行请求管理员权限，桌面图标正确
+离线测试：断网环境下，拖拽 Excel → 生成报告 → 导出 PDF/Excel 全流程通过
+大数据测试：15万行文件被拒绝并提示，10万行文件在 5 秒内生成报告
+日期测试：支持 YYYYMMDD/YYYY-MM-DD/YYYY/MM/DD 等多种日期格式，时间筛选基于数据实际时间
+单位测试：小数值（0.2）显示为"0.2"，中等数值（800）显示为"800"，大数值（80000）显示为"8.00万"
+UI测试：所有页面动画流畅，卡片悬浮效果正常，步骤导航可正常回退
+导出测试：PDF 中文显示正常，Excel 数据完整，图表可下载为 PNG
+
+8.3 性能基准
+
+启动时间：应用打开到界面呈现 < 3 秒（普通办公本）
+解析时间：5万行 Excel 解析 < 2 秒
+计算时间：Top10 计算（15万行）< 1 秒
+内存占用：15万行数据处理时峰值内存 < 500MB
+PDF 生成：html2canvas 截图 + jsPDF 生成 < 3 秒
+
+8.4 版本标识
+
+应用标题：DataMind V1.0
+界面版本：所有界面统一显示 "V1.0"，删除开发阶段标识
+关于对话框：显示版本号 V1.0.0
+
+九、已知问题与技术债务（V1 阶段）
+
+风险等级：高
+问题描述：主线程计算阻塞
+影响：>10万行数据时 UI 卡死
+缓解措施：15万行硬限制，V2 引入 Python 子进程处理大数据
+修复版本：V2
+
+风险等级：中
+问题描述：macOS 未签名
+影响：用户首次打开需手动允许（系统设置-隐私与安全性）
+缓解措施：V1 接受未签名，V2 配置 Apple Developer 签名
+修复版本：V2
+
+风险等级：中
+问题描述：日期格式混乱（YYYYMMDD vs 其他格式）
+影响：dayjs 模糊解析可能误判（如"0102"是1月2日还是2月1日）
+缓解措施：界面提示"建议先在 Excel 中统一为 YYYYMMDD 格式"
+修复版本：V1.1
+
+风险等级：低
+问题描述：ECharts 内存泄漏
+影响：反复生成报告未刷新页面时内存增长
+缓解措施：已添加 dispose()，建议用户长时间使用后重启应用
+修复版本：V1.1
+
+风险等级：低
+问题描述：PDF 分页截断
+影响：html2canvas 截图可能截断表格（A4 分页问题）
+缓解措施：V1 截图单页长图，V2 优化分页算法
+修复版本：V2
+
+十、V2 阶段迁移路线图
+
+10.1 功能增强（Priority 1）
+
+时间趋势模板：增加模板 5（月度趋势折线图），需强化日期解析器
+Python 算法插件：大数据计算切为 Python 子进程（sklearn 预测），支持 50万行+
+自动更新：启用 electron-updater，配置更新服务器
+图表交互：ECharts 支持下钻（点击柱形查看明细）
+单位系统增强：支持自定义单位公式（如"万箱"=10000箱，"打"=12件）
+
+10.2 架构升级（Priority 2）
+
+TypeScript 迁移：全项目类型化，提升可维护性
+ORM 云端化：支持 PostgreSQL 连接，企业数据云端备份（可选）
+模板市场：实现 config.json 动态加载，用户上传自定义模板（V3 预览）
+
+10.3 商业化（Priority 3）
+
+License 系统：序列号验证，试用版限制（如限制导出次数）
+在线激活：网络验证（可选离线模式）
+企业版功能：API 接口、批量处理、团队协作
+
+本项目基于以下技术决策：
+
+Node v24 + Electron 32.2.0 + Vue 3.4 ESM 架构
+主线程计算模式（V1 特定，V2 将引入 Python 子进程）
+IPC 主进程代理文件保存（解决 Windows 权限问题）
+html2canvas + jsPDF 方案（解决中文 PDF 乱码，替代 pdfmake）
+sql.js WASM 方案（零编译依赖）
+智能自适应单位系统（根据数据量级自动选择最优显示方式）
+基于数据实际时间的筛选逻辑（相对时间基于 dataMaxDate）
+跨平台打包：Windows Portable（本地）+ macOS DMG（GitHub Actions CI/CD）

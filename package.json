@@ -1,0 +1,52 @@
+{
+  "name": "datamind",
+  "version": "1.2.0",
+  "description": "DATAMIND 企业数智决策平台 - V1.2",
+  "type": "module",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "node scripts/dev-start.js",
+    "build": "vite build && electron-builder",
+    "build:win": "vite build && electron-builder --win",
+    "build:mac": "vite build && electron-builder --mac",
+    "clean": "rimraf node_modules dist release package-lock.json",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.0",
+    "dayjs": "^1.11.19",
+    "echarts": "^6.0.0",
+    "element-plus": "^2.5.0",
+    "fs-extra": "^11.0.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.0",
+    "pinia": "^3.0.4",
+    "sql.js": "^1.12.0",
+    "vue": "^3.4.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "concurrently": "^8.2.0",
+    "electron": "32.2.0",
+    "electron-builder": "^24.13.3",
+    "rimraf": "^5.0.0",
+    "terser": "^5.46.0",
+    "unplugin-auto-import": "^0.17.0",
+    "unplugin-vue-components": "^0.26.0",
+    "vite": "^5.0.0",
+    "wait-on": "^7.2.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "keywords": [
+    "electron",
+    "vue3",
+    "element-plus",
+    "sqlite",
+    "sql.js"
+  ],
+  "author": "奶酪数智",
+  "license": "MIT"
+}

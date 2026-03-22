@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataMind 数据库调试器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      background: #2d2d2d;
+      padding: 15px 20px;
+      border-bottom: 1px solid #3e3e3e;
+    }
+    .header h1 {
+      font-size: 18px;
+      color: #409eff;
+      font-weight: 500;
+    }
+    .header .subtitle {
+      font-size: 12px;
+      color: #888;
+      margin-top: 5px;
+    }
+    .toolbar {
+      background: #252526;
+      padding: 10px 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid #3e3e3e;
+    }
+    button {
+      background: #0e639c;
+      color: white;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    button:hover {
+      background: #1177bb;
+    }
+    button.secondary {
+      background: #3c3c3c;
+    }
+    button.secondary:hover {
+      background: #4c4c4c;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 250px;
+      background: #252526;
+      border-right: 1px solid #3e3e3e;
+      padding: 15px;
+    }
+    .sidebar h3 {
+      font-size: 13px;
+      color: #bbbbbb;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .table-list {
+      list-style: none;
+    }
+    .table-list li {
+      padding: 8px 10px;
+      cursor: pointer;
+      border-radius: 3px;
+      font-size: 13px;
+      color: #cccccc;
+    }
+    .table-list li:hover {
+      background: #2a2d2e;
+    }
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .sql-input {
+      background: #1e1e1e;
+      border-bottom: 1px solid #3e3e3e;
+      padding: 15px;
+    }
+    .sql-input label {
+      display: block;
+      font-size: 12px;
+      color: #bbbbbb;
+      margin-bottom: 8px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      background: #3c3c3c;
+      border: 1px solid #3e3e3e;
+      color: #d4d4d4;
+      padding: 10px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      resize: vertical;
+      border-radius: 3px;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #0e639c;
+    }
+    .results {
+      flex: 1;
+      padding: 15px;
+      overflow: auto;
+    }
+    .results h3 {
+      font-size: 13px;
+      color: #bbbbbb;
+      margin-bottom: 10px;
+    }
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .result-table th,
+    .result-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border: 1px solid #3e3e3e;
+    }
+    .result-table th {
+      background: #2d2d2d;
+      color: #cccccc;
+      font-weight: 500;
+    }
+    .result-table td {
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+    .result-table tr:hover td {
+      background: #2a2d2e;
+    }
+    .status-bar {
+      background: #007acc;
+      color: white;
+      padding: 5px 20px;
+      font-size: 12px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+    .empty-state p {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>DataMind 数据库调试器</h1>
+    <div class="subtitle">阶段1 - 预留调试界面（阶段2接入真实 sql.js）</div>
+  </div>
+
+  <div class="toolbar">
+    <button onclick="executeSQL()">执行 SQL</button>
+    <button class="secondary" onclick="clearResults()">清空结果</button>
+    <button class="secondary" onclick="loadSample()">加载示例</button>
+  </div>
+
+  <div class="main">
+    <div class="sidebar">
+      <h3>数据表</h3>
+      <ul class="table-list" id="tableList">
+        <li>（暂无表 - 请先初始化数据库）</li>
+      </ul>
+    </div>
+
+    <div class="content">
+      <div class="sql-input">
+        <label>SQL 查询语句</label>
+        <textarea id="sqlInput" placeholder="输入 SQL 语句，例如: SELECT * FROM users;"></textarea>
+      </div>
+
+      <div class="results" id="results">
+        <div class="empty-state">
+          <p>输入 SQL 语句并点击"执行 SQL"按钮</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    就绪 | 平台: <span id="platform">-</span> | Node: <span id="nodeVersion">-</span>
+  </div>
+
+  <script>
+    // 从 preload 获取环境信息
+    if (window.electronAPI) {
+      document.getElementById('platform').textContent = window.electronAPI.platform || '-';
+      document.getElementById('nodeVersion').textContent = window.electronAPI.nodeVersion || '-';
+    }
+
+    function executeSQL() {
+      const sql = document.getElementById('sqlInput').value.trim();
+      if (!sql) {
+        showMessage('请输入 SQL 语句');
+        return;
+      }
+
+      // 阶段1：模拟执行
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = `
+        <h3>执行结果</h3>
+        <div style="padding: 20px; background: #2d2d2d; border-radius: 3px;">
+          <p style="color: #4ec9b0;">SQL: ${escapeHtml(sql)}</p>
+          <p style="color: #ce9178; margin-top: 10px;">阶段1提示：数据库功能将在阶段2实现</p>
+          <p style="color: #888; margin-top: 5px;">当前为 Mock 模式，sql.js 尚未完全集成</p>
+        </div>
+      `;
+
+      updateStatus('SQL 已执行（Mock 模式）');
+    }
+
+    function clearResults() {
+      document.getElementById('results').innerHTML = `
+        <div class="empty-state">
+          <p>输入 SQL 语句并点击"执行 SQL"按钮</p>
+        </div>
+      `;
+      updateStatus('结果已清空');
+    }
+
+    function loadSample() {
+      document.getElementById('sqlInput').value = `CREATE TABLE users (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT
+);
+
+INSERT INTO users (name, email) VALUES 
+  ('张三', 'zhangsan@example.com'),
+  ('李四', 'lisi@example.com');
+
+SELECT * FROM users;`;
+      updateStatus('示例 SQL 已加载');
+    }
+
+    function showMessage(msg) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = `<div style="padding: 20px; color: #ce9178;">${escapeHtml(msg)}</div>`;
+    }
+
+    function updateStatus(msg) {
+      document.getElementById('statusBar').innerHTML = `${msg} | 平台: <span id="platform">${window.electronAPI?.platform || '-'}</span> | Node: <span id="nodeVersion">${window.electronAPI?.nodeVersion || '-'}</span>`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 快捷键支持
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        executeSQL();
+      }
+    });
+  </script>
+</body>
+</html>
